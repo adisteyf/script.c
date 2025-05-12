@@ -25,24 +25,50 @@ main (int args, char ** argv) \
   __VA_ARGS__ \
 }
 
-int _ctmd(char ** args) {
+/*int _ctmd(char ** args) {
   pid_t pid = fork();
-  if (pid < 0) {
+  if (pid<0) {
     puts("SCRIPTS: Can't fork");
     return 1;
   } else if (!pid) {
-    execvp(args[0], args);
+    execvp(args[0],args);
     puts("SCRIPTS: Error during this command");
-    printf("args[0] == %s\n", args[0]);
+    printf("args[0] == %s\n",args[0]);
     exit(1);
   } else {
     int stat=0;
-    waitpid(pid, &stat, 0);
+    waitpid(pid,&stat,0);
 
     if (WIFEXITED(stat) && WEXITSTATUS(stat)) {
-      printf("SCRIPTS: Error: %d\n", WEXITSTATUS(stat));
+      printf("SCRIPTS: Error: %d\n",WEXITSTATUS(stat));
       exit(1);
     }
+  }
+
+  return 0;
+}*/
+
+int _ctmd(char ** args) {
+  pid_t pid = fork();
+  int stat=0;
+  if      (pid<0) { goto cant_fork; }
+  else if (!pid)  { goto exec_cmd;  }
+  else            { goto wait_cmd;  }
+
+cant_fork:
+  puts("SCRIPTS: Can't fork");
+  return 1;
+exec_cmd:
+  execvp(args[0],args);
+  puts("SCRIPTS: Error during this command");
+  printf("args[0] == %s\n",args[0]);
+  exit(1);
+wait_cmd:
+  waitpid(pid,&stat,0);
+
+  if (WIFEXITED(stat) && WEXITSTATUS(stat)) {
+    printf("SCRIPTS: Error: %d\n",WEXITSTATUS(stat));
+    exit(1);
   }
 
   return 0;
@@ -59,7 +85,7 @@ x##_end:
 #ifdef build
 int main() {
   __CT_REBUILD;
-  ctmd((char *[]){SRC_BUILD, 0})
+  ctmd((char *[]){SRC_BUILD,0})
   return 0;
 }
 #endif
